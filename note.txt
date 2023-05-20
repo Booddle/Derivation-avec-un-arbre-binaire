@@ -1,0 +1,107 @@
+noeud *arbre::derivate(noeud * n, char v){
+    noeud *current = n;
+    cout << "type: " << current->type << endl;
+    if(current->type == 'f'){
+        cout << "valeur: " << current->val << endl;
+        noeud *n = new noeud;
+        n->type = 'f';
+        n->val = 0;
+        return n;
+    }else if(current->type == 'v'){
+        if(current->ope == v){
+            noeud *n = new noeud;
+            n->type = 'f';
+            n->val = 1;
+            return n;
+        }else{
+            noeud *n = new noeud;
+            n->type = 'f';
+            n->val = 0;
+            return n;
+        }
+    }else{
+        if(n->ope=='+' || n->ope=='-'){
+            n->filsG = derivate(current->filsG,v);
+            n->filsD = derivate(current->filsD,v);
+            return n;
+        }else if(n->ope=='*'){
+            n->type = 'o';
+            n->ope = '+';
+            noeud *n1 = new noeud;
+            n1->type = 'o';
+            n1->ope = '*';
+            n1->filsG = derivate(current->filsG,v);
+            n1->filsD = current->filsD;
+            noeud *n2 = new noeud;
+            n2->type = 'o';
+            n2->ope = '*';
+            n2->filsG = current->filsG;
+            n2->filsD = derivate(current->filsD,v);
+            n->filsG = n1;
+            n->filsD = n2;
+            return n;
+        }else if(n->ope=='/'){
+            n->type = 'o';
+            n->ope = '/';
+            noeud *n1 = new noeud;
+            n1->type = 'o';
+            n1->ope = '-';
+            noeud *n2 = new noeud;
+            n2->type = 'o';
+            n2->ope = '*';
+            noeud *n3 = new noeud;
+            n3->type = 'o';
+            n3->ope = '*';
+            noeud *n4 = new noeud;
+            if(current->filsD->type == 'f'){
+                n4->val = pow(current->filsD->val,2);
+            }else if(current->filsD->type == 'v'){
+               noeud *n5 = new noeud;
+                n5->type = 'v';
+                n5->ope = current->filsD->ope;
+                n4->filsG = n5;
+                n4->filsD = n5;
+                n4->type = 'o';
+                n4->ope = '*';
+            }
+            n2->filsG = current->filsG;
+            n2->filsD = derivate(current->filsD,v);
+            n3->filsG = derivate(current->filsG,v);
+            n3->filsD = current->filsD;
+            n1->filsG = n3;
+            n1->filsD = n2;
+            n->filsG = n1;
+            n->filsD = n4;
+            return n;
+        }else if (n->ope == '^') {
+                int exponent = current->filsD->val;
+                noeud* derivateFilsG = derivate(current->filsG, v);
+
+                if (exponent == 0) {
+                    noeud* n = new noeud('f');
+                    return n;
+                }
+                else {
+                    noeud* derivateBase = derivate(current->filsG, v);
+                    noeud* n1 = new noeud('o','*');
+                    noeud* n2 = new noeud('o','^');
+                    noeud* n3 = new noeud('f');
+                    n2->filsG = current->filsG;
+                    n2->filsD = current->filsD;
+                    n1->filsD = derivateBase;
+                    n3->val = exponent-1;
+                    n1->filsG = n3;
+                    n->filsD = n2;
+                    derivateFilsG->val *= exponent;
+                    n->filsG = n1;
+
+                    n->filsD->val = exponent - 1;
+
+                    return n;
+                }
+            }
+
+        }
+
+    return nullptr; //safe return
+}
